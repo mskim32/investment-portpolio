@@ -36,10 +36,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [activeSearchField, setActiveSearchField] = useState<"symbol" | "name" | null>(null);
 
-  // Search autocomplete symbol effect
+  // Search autocomplete symbol or name effect
   useEffect(() => {
-    if (!symbol.trim() || symbol === name) {
+    const query = activeSearchField === "symbol" ? symbol : activeSearchField === "name" ? name : "";
+    
+    if (!query.trim() || (activeSearchField === "symbol" && symbol === name) || (activeSearchField === "name" && name === symbol)) {
       setSearchResults([]);
       return;
     }
@@ -47,7 +50,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
     const delayDebounce = setTimeout(async () => {
       try {
         setIsSearching(true);
-        const res = await fetch(`/api/search?q=${encodeURIComponent(symbol)}`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
         const json = await res.json();
         if (json.success && json.quotes) {
           setSearchResults(json.quotes);
@@ -64,7 +67,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
     }, 250);
 
     return () => clearTimeout(delayDebounce);
-  }, [symbol, name]);
+  }, [symbol, name, activeSearchField]);
 
   const handleSelectQuote = (quote: { symbol: string; name: string; assetType: AssetType }) => {
     setSymbol(quote.symbol);
@@ -72,6 +75,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
     setAssetType(quote.assetType);
     setSearchResults([]);
     setShowDropdown(false);
+    setActiveSearchField(null);
   };
 
   // Default setup on open
@@ -244,19 +248,25 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                         type="text"
                         placeholder="예: AAPL, 005930.KS"
                         value={symbol}
-                        onChange={(e) => setSymbol(e.target.value)}
+                        onChange={(e) => {
+                          setSymbol(e.target.value);
+                          setActiveSearchField("symbol");
+                        }}
                         onFocus={() => {
+                          setActiveSearchField("symbol");
                           if (searchResults.length > 0) setShowDropdown(true);
                         }}
                         onBlur={() => {
-                          // Allow onMouseDown to execute first
-                          setTimeout(() => setShowDropdown(false), 200);
+                          setTimeout(() => {
+                            setShowDropdown(false);
+                            setActiveSearchField(null);
+                          }, 200);
                         }}
                         required
                         autoComplete="off"
                       />
 
-                      {showDropdown && searchResults.length > 0 && (
+                      {showDropdown && activeSearchField === "symbol" && searchResults.length > 0 && (
                         <div className={styles.dropdownList}>
                           {searchResults.map((quote) => (
                             <button
@@ -284,22 +294,73 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                         </div>
                       )}
 
-                      {isSearching && (
+                      {isSearching && activeSearchField === "symbol" && (
                         <div className={styles.dropdownList}>
                           <div className={styles.searchingText}>검색 중...</div>
                         </div>
                       )}
                     </div>
                   </div>
-                  <div className={styles.formGroup}>
+                  
+                  <div className={styles.formGroup} style={{ position: "relative" }}>
                     <label className={styles.label}>종목명</label>
-                    <input
-                      type="text"
-                      placeholder="예: 애플, 삼성전자"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
+                    <div className={styles.autocompleteContainer}>
+                      <input
+                        type="text"
+                        placeholder="예: 애플, 삼성전자"
+                        value={name}
+                        onChange={(e) => {
+                          setName(e.target.value);
+                          setActiveSearchField("name");
+                        }}
+                        onFocus={() => {
+                          setActiveSearchField("name");
+                          if (searchResults.length > 0) setShowDropdown(true);
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => {
+                            setShowDropdown(false);
+                            setActiveSearchField(null);
+                          }, 200);
+                        }}
+                        required
+                        autoComplete="off"
+                      />
+
+                      {showDropdown && activeSearchField === "name" && searchResults.length > 0 && (
+                        <div className={styles.dropdownList}>
+                          {searchResults.map((quote) => (
+                            <button
+                              key={quote.symbol}
+                              type="button"
+                              className={styles.dropdownItem}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSelectQuote(quote);
+                              }}
+                            >
+                              <div className={styles.dropdownLeft}>
+                                <span className={styles.dropdownSymbol}>{quote.symbol}</span>
+                                <span className={styles.dropdownName}>{quote.name}</span>
+                              </div>
+                              <span className={`${styles.dropdownType} ${styles[`dropdownType_${quote.assetType}`]}`}>
+                                {quote.assetType === "stock_kr"
+                                  ? "한국 주식"
+                                  : quote.assetType === "stock_us"
+                                  ? "미국 주식"
+                                  : "암호화폐"}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {isSearching && activeSearchField === "name" && (
+                        <div className={styles.dropdownList}>
+                          <div className={styles.searchingText}>검색 중...</div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 

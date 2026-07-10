@@ -1,11 +1,45 @@
 import { NextResponse } from "next/server";
 
+// Translation dictionary to map Korean queries for major US/global assets to English
+const KOREAN_TO_ENGLISH_MAP: { [key: string]: string } = {
+  "테슬라": "Tesla",
+  "애플": "Apple",
+  "엔비디아": "Nvidia",
+  "마이크로소프트": "Microsoft",
+  "마소": "Microsoft",
+  "구글": "Google",
+  "알파벳": "Alphabet",
+  "아마존": "Amazon",
+  "메타": "Meta",
+  "페이스북": "Facebook",
+  "넷플릭스": "Netflix",
+  "비트코인": "Bitcoin",
+  "이더리움": "Ethereum",
+  "도지코인": "Dogecoin",
+  "솔라나": "Solana",
+  "리플": "XRP",
+  "에이다": "Cardano",
+  "삼성전자": "Samsung Electronics",
+  "삼성": "Samsung",
+  "하이닉스": "Hynix",
+};
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
 
   if (!query || query.trim().length < 1) {
     return NextResponse.json({ success: true, quotes: [] });
+  }
+
+  let cleanQuery = query.trim();
+  const lowerQuery = cleanQuery.toLowerCase();
+  
+  // Apply translation if query matches any Korean key
+  for (const [kr, en] of Object.entries(KOREAN_TO_ENGLISH_MAP)) {
+    if (lowerQuery.includes(kr)) {
+      cleanQuery = cleanQuery.replace(new RegExp(kr, "gi"), en);
+    }
   }
 
   const headers = {
@@ -17,7 +51,7 @@ export async function GET(request: Request) {
   try {
     const res = await fetch(
       `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(
-        query
+        cleanQuery
       )}&quotesCount=8&newsCount=0`,
       { headers, next: { revalidate: 3600 } } // Cache search results for 1 hour
     );
