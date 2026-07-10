@@ -1,0 +1,368 @@
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.titleSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.headerIcon {
+  color: var(--primary);
+}
+
+.title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.loadingPulse {
+  font-size: 0.75rem;
+  color: var(--primary);
+  background: var(--primary-glow);
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* Controls */
+.controlsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.searchBox {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.searchInput {
+  padding-left: 2.25rem;
+  height: 38px;
+  font-size: 0.85rem;
+}
+
+.sortBox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sortIcon {
+  color: var(--text-secondary);
+}
+
+.sortSelect {
+  height: 38px;
+  padding: 0 1.5rem 0 0.5rem;
+  background: var(--bg-surface-solid);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  cursor: pointer;
+  appearance: none;
+  min-width: 140px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.4rem center;
+  background-size: 0.8rem;
+}
+
+.sortSelect:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+/* Asset Tabs */
+.tabsContainer {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 2px;
+}
+
+.tabBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.5rem 0.875rem;
+  cursor: pointer;
+  position: relative;
+  transition: all var(--transition-fast);
+}
+
+.tabBtn:hover {
+  color: var(--text-primary);
+}
+
+.tabActive {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.tabActive::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+/* Table styling */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.assetNameCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.assetName {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.assetSymbol {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.badge {
+  display: inline-flex;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  border-radius: 4px;
+}
+
+.badgeKr {
+  background: rgba(79, 70, 229, 0.08);
+  color: var(--primary);
+}
+
+.badgeUs {
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.badgeCrypto {
+  background: rgba(5, 150, 105, 0.08);
+  color: var(--profit);
+}
+
+.badgeCash {
+  background: rgba(217, 119, 6, 0.08);
+  color: #d97706;
+}
+
+.priceContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.priceChange {
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.valuationContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.secondaryVal {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.profitContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+}
+
+.profitRate {
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.profitBg {
+  background: var(--profit-glow);
+  color: var(--profit);
+}
+
+.lossBg {
+  background: var(--loss-glow);
+  color: var(--loss);
+}
+
+.profit {
+  color: var(--profit);
+  font-weight: 600;
+}
+
+.loss {
+  color: var(--loss);
+  font-weight: 600;
+}
+
+.up {
+  color: var(--profit);
+}
+
+.down {
+  color: var(--loss);
+}
+
+.emptyState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 180px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* Mobile responsive card list */
+.mobileCardsContainer {
+  display: none;
+}
+
+/* Responsive breakpoint */
+@media (max-width: 768px) {
+  .tableWrapper {
+    display: none;
+  }
+  
+  .mobileCardsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .mobileCard {
+    background: var(--bg-surface-solid);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+  
+  .mobileCardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  
+  .mobileAssetName {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.92rem;
+  }
+  
+  .mobileAssetSymbol {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+  }
+  
+  .mobileCardGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.5rem;
+  }
+  
+  .mobileGridItem {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .mobileLabel {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.1rem;
+  }
+  
+  .mobileValue {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  
+  .mobileValueHighlight {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  
+  .mobileValueSub {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+  
+  .mobileProfitContainer {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    justify-content: flex-end;
+  }
+}

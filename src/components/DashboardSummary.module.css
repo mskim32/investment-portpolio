@@ -1,0 +1,164 @@
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 155px;
+  padding: 1.25rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+  z-index: 1;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.iconContainer {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(79, 70, 229, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  color: var(--primary);
+}
+
+.cardLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.cardBody {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  z-index: 2;
+}
+
+.cardValue {
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.cardSubtext {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.badgeRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+}
+
+.profitBadge {
+  background: var(--profit-glow);
+  color: var(--profit);
+}
+
+.lossBadge {
+  background: var(--loss-glow);
+  color: var(--loss);
+}
+
+.profitText {
+  color: var(--profit) !important;
+}
+
+.lossText {
+  color: var(--loss) !important;
+}
+
+.profitBorder {
+  border-color: rgba(5, 150, 105, 0.15);
+}
+
+.profitBorder:hover {
+  border-color: rgba(5, 150, 105, 0.35);
+  box-shadow: 0 10px 30px rgba(5, 150, 105, 0.04);
+}
+
+.lossBorder {
+  border-color: rgba(220, 38, 38, 0.15);
+}
+
+.lossBorder:hover {
+  border-color: rgba(220, 38, 38, 0.35);
+  box-shadow: 0 10px 30px rgba(220, 38, 38, 0.04);
+}
+
+/* Sparkline at the bottom of the card - dimmed for light mode */
+.sparkline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 45px;
+  z-index: 0;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.sparklineSvg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Responsive Styles */
+@media (max-width: 960px) {
+  .summaryGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .card {
+    min-height: 140px;
+    padding: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardValue {
+    font-size: 1.6rem;
+  }
+}
