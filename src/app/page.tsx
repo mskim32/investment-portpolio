@@ -9,6 +9,7 @@ import { AssetList } from "@/components/AssetList";
 import { AccountManager } from "@/components/AccountManager";
 import { TransactionHistory } from "@/components/TransactionHistory";
 import { TransactionModal } from "@/components/TransactionModal";
+import { AutoSchedulesSummary } from "@/components/AutoSchedulesSummary";
 
 export default function Home() {
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
@@ -35,10 +36,11 @@ export default function Home() {
               <TransactionHistory />
             </div>
 
-            {/* Right Column: Donut allocation chart and account cash manager */}
+            {/* Right Column: Donut allocation chart, account cash manager, and overall schedules */}
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
               <AssetAllocation />
               <AccountManager />
+              <AutoSchedulesSummary />
             </div>
           </div>
         </div>

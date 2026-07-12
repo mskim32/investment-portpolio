@@ -1,0 +1,238 @@
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.875rem;
+}
+
+.titleSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.headerIcon {
+  color: var(--primary);
+}
+
+.title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+/* Tabs */
+.tabRow {
+  display: flex;
+  background: rgba(15, 23, 42, 0.03);
+  padding: 3px;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.tabBtn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.45rem 0;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tabActive {
+  background: var(--bg-surface-solid);
+  color: var(--primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Content Body */
+.contentBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-surface-solid);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 0.625rem 0.75rem;
+  transition: all var(--transition-fast);
+}
+
+.item:hover {
+  border-color: var(--border-color-hover);
+  background: rgba(15, 23, 42, 0.005);
+}
+
+.itemMain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.accountRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.accountTag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.scheduleText {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.scheduleText strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.typeBadge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.deposit {
+  background: rgba(5, 150, 105, 0.08);
+  color: var(--profit);
+}
+
+.withdraw {
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--loss);
+}
+
+.assetBadge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: rgba(79, 70, 229, 0.08);
+  color: var(--primary);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.amountText {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.descText {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.nameText {
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nameText strong {
+  font-weight: 600;
+}
+
+.qtyText {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.deleteBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  opacity: 0.5;
+  margin-left: 0.5rem;
+}
+
+.item:hover .deleteBtn {
+  opacity: 1;
+}
+
+.deleteBtn:hover {
+  color: var(--loss);
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.01);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.emptyIcon {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
