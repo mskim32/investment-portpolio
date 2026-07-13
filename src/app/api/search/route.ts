@@ -27,22 +27,69 @@ const KOREAN_TO_ENGLISH_MAP: { [key: string]: string } = {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
+  const assetTypeFilter = searchParams.get("type"); // "stock_kr", "stock_us", "crypto"
 
   if (!query || query.trim().length < 1) {
     return NextResponse.json({ success: true, quotes: [] });
   }
 
-  let cleanQuery = query.trim();
-  const lowerQuery = cleanQuery.toLowerCase();
-  
-  // Apply translation if query matches any Korean key
-  for (const [kr, en] of Object.entries(KOREAN_TO_ENGLISH_MAP)) {
-    if (lowerQuery.includes(kr)) {
-      cleanQuery = cleanQuery.replace(new RegExp(kr, "gi"), en);
+  const cleanQuery = query.trim();
+
+  // If the filter is specifically "stock_kr" (Korean Stock), we use Naver Finance mobile autocomplete API
+  if (assetTypeFilter === "stock_kr") {
+    const naverHeaders = {
+      "User-Agent":
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
+      Referer: "https://m.stock.naver.com/",
+      Accept: "application/json",
+    };
+
+    try {
+      const res = await fetch(
+        `https://m.stock.naver.com/front-api/search/autoComplete?query=${encodeURIComponent(
+          cleanQuery
+        )}&target=stock`,
+        { headers: naverHeaders, next: { revalidate: 3600 } } // Cache search results for 1 hour
+      );
+
+      if (!res.ok) {
+        throw new Error(`Naver Search API responded with status ${res.status}`);
+      }
+
+      const data = await res.json();
+      const items = data?.result?.items || [];
+
+      const results = items
+        .filter((item: any) => item.nationCode === "KOR" && item.code)
+        .map((item: any) => {
+          const suffix = item.typeCode === "KOSDAQ" ? ".KQ" : ".KS";
+          return {
+            symbol: `${item.code}${suffix}`,
+            name: item.name,
+            assetType: "stock_kr" as const,
+            exchange: item.typeName || (item.typeCode === "KOSDAQ" ? "KOSDAQ" : "KOSPI"),
+          };
+        });
+
+      return NextResponse.json({ success: true, quotes: results });
+    } catch (error) {
+      console.error("Naver ticker search failed:", error);
+      return NextResponse.json({ success: false, error: "Failed to fetch Naver quotes" }, { status: 500 });
     }
   }
 
-  const headers = {
+  // Otherwise, we use Yahoo Finance search (for US stocks, Cryptos, or general queries)
+  let yahooQuery = cleanQuery;
+  const lowerQuery = yahooQuery.toLowerCase();
+  
+  // Apply translation if query matches any Korean key (primarily for global assets on Yahoo)
+  for (const [kr, en] of Object.entries(KOREAN_TO_ENGLISH_MAP)) {
+    if (lowerQuery.includes(kr)) {
+      yahooQuery = yahooQuery.replace(new RegExp(kr, "gi"), en);
+    }
+  }
+
+  const yahooHeaders = {
     "User-Agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     Accept: "application/json",
@@ -51,9 +98,9 @@ export async function GET(request: Request) {
   try {
     const res = await fetch(
       `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(
-        cleanQuery
-      )}&quotesCount=8&newsCount=0`,
-      { headers, next: { revalidate: 3600 } } // Cache search results for 1 hour
+        yahooQuery
+      )}&quotesCount=10&newsCount=0`,
+      { headers: yahooHeaders, next: { revalidate: 3600 } } // Cache search results for 1 hour
     );
 
     if (!res.ok) {
@@ -83,7 +130,7 @@ export async function GET(request: Request) {
           assetType = "stock_us";
         }
 
-        // Clean cryptocurrency symbol formatting (e.g. BTC-USD -> BTC) for user interface consistency
+        // Clean cryptocurrency symbol formatting
         let cleanSymbol = symbol;
         if (assetType === "crypto" && symbol.endsWith("-USD")) {
           cleanSymbol = symbol.replace("-USD", "");
@@ -97,11 +144,22 @@ export async function GET(request: Request) {
           assetType,
           exchange: q.exchange,
         };
+      })
+      // Apply type filters requested by client
+      .filter((quote: any) => {
+        if (assetTypeFilter === "stock_us") {
+          // Keep only US stocks/ETFs (not crypto, and not ending with .KS or .KQ)
+          return quote.assetType === "stock_us" && !quote.symbol.endsWith(".KS") && !quote.symbol.endsWith(".KQ");
+        }
+        if (assetTypeFilter === "crypto") {
+          return quote.assetType === "crypto";
+        }
+        return true;
       });
 
     return NextResponse.json({ success: true, quotes: results });
   } catch (error) {
-    console.error("Ticker search failed:", error);
-    return NextResponse.json({ success: false, error: "Failed to fetch quotes" }, { status: 500 });
+    console.error("Yahoo ticker search failed:", error);
+    return NextResponse.json({ success: false, error: "Failed to fetch Yahoo quotes" }, { status: 500 });
   }
 }

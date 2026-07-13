@@ -50,7 +50,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
     const delayDebounce = setTimeout(async () => {
       try {
         setIsSearching(true);
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=${assetType}`);
         const json = await res.json();
         if (json.success && json.quotes) {
           setSearchResults(json.quotes);
@@ -67,7 +67,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
     }, 250);
 
     return () => clearTimeout(delayDebounce);
-  }, [symbol, name, activeSearchField]);
+  }, [symbol, name, activeSearchField, assetType]);
 
   const handleSelectQuote = (quote: { symbol: string; name: string; assetType: AssetType }) => {
     setSymbol(quote.symbol);
