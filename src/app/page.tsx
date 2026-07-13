@@ -10,6 +10,7 @@ import { AccountManager } from "@/components/AccountManager";
 import { TransactionHistory } from "@/components/TransactionHistory";
 import { TransactionModal } from "@/components/TransactionModal";
 import { AutoSchedulesSummary } from "@/components/AutoSchedulesSummary";
+import { MarketIndices } from "@/components/MarketIndices";
 
 export default function Home() {
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
@@ -24,6 +25,9 @@ export default function Home() {
         <div className="animate-fade">
           {/* Top Navigation Control Center */}
           <Navbar />
+          
+          {/* Market Indices Tracker */}
+          <MarketIndices />
           
           {/* Top Summary Cards */}
           <DashboardSummary />

@@ -69,7 +69,15 @@ export const Navbar: React.FC = () => {
           <TrendingUp size={20} color="#fff" />
         </div>
         <div>
-          <h1 className={styles.title}>Antigravity Portfolio</h1>
+          <div className={styles.titleContainer}>
+            <h1 className={styles.title}>Antigravity Portfolio</h1>
+            <div className={styles.liveIndicator} title="30초 간격 실시간 자동 시세 반영 중">
+              <span className={`${styles.liveDot} ${isLoadingPrices ? styles.pulsing : ""}`} />
+              <span className={styles.liveText}>
+                {isLoadingPrices ? "갱신중" : "Live"}
+              </span>
+            </div>
+          </div>
           <span className={styles.subtitle}>통합 자산 관리 시스템</span>
         </div>
       </div>

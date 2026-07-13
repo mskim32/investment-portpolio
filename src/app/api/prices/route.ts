@@ -30,7 +30,7 @@ export async function GET(request: Request) {
 
       const res = await fetch(
         `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=1d`,
-        { headers, next: { revalidate: 60 } } // Cache for 60 seconds
+        { headers, next: { revalidate: 15 } } // Cache for 15 seconds
       );
 
       if (!res.ok) {
@@ -70,15 +70,18 @@ export async function GET(request: Request) {
     try {
       const res = await fetch(
         `https://query1.finance.yahoo.com/v8/finance/chart/KRW=X?interval=1d&range=1d`,
-        { headers, next: { revalidate: 300 } } // Cache exchange rate for 5 mins
+        { headers, next: { revalidate: 60 } } // Cache exchange rate for 60 seconds
       );
       if (res.ok) {
         const data = await res.json();
         const meta = data?.chart?.result?.[0]?.meta;
         if (meta?.regularMarketPrice) {
+          const price = meta.regularMarketPrice;
+          const prevClose = meta.previousClose || price;
+          const change24h = prevClose !== 0 ? ((price - prevClose) / prevClose) * 100 : 0;
           results["KRW=X"] = {
-            price: meta.regularMarketPrice,
-            change24h: 0,
+            price,
+            change24h,
             currency: "KRW",
           };
         }

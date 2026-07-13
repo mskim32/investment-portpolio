@@ -382,11 +382,31 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [transactions]);
 
-  // Refresh prices on load once transactions are ready
+  // Periodically refresh prices in the background (every 30 seconds)
   useEffect(() => {
-    if (isLoaded && transactions.length > 0) {
-      refreshPrices();
-    }
+    if (!isLoaded) return;
+
+    // Refresh immediately on load/mount
+    refreshPrices();
+
+    const intervalId = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        refreshPrices();
+      }
+    }, 30000); // Refresh every 30 seconds
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refreshPrices();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [isLoaded, refreshPrices]);
 
   // Export all data to JSON file

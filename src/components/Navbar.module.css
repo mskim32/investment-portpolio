@@ -185,3 +185,54 @@
     padding: 0;
   }
 }
+
+/* Real-time Live Indicator Styles */
+.titleContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.liveIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--profit);
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 4px var(--profit);
+  animation: blink 2s infinite;
+}
+
+.liveDot.pulsing {
+  animation: pulse-ring 1s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+}
+
+.liveText {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--profit);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.85); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.8); }
+  70% { transform: scale(1.15); box-shadow: 0 0 0 4px rgba(5, 150, 105, 0); }
+  100% { transform: scale(0.85); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+}
