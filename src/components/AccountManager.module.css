@@ -170,8 +170,8 @@
 }
 
 .deleteBtn:hover {
-  color: var(--loss);
-  background: rgba(220, 38, 38, 0.08);
+  color: var(--danger);
+  background: var(--danger-glow);
 }
 
 /* Inline Edit Cash Row */
@@ -205,13 +205,13 @@
 }
 
 .saveBtn {
-  color: var(--profit);
-  background: var(--profit-glow);
+  color: #059669; /* Keep Green for Save/Success action */
+  background: rgba(5, 150, 105, 0.08);
 }
 
 .closeBtn {
-  color: var(--loss);
-  background: var(--loss-glow);
+  color: var(--danger); /* Use Danger for Close/Cancel action */
+  background: var(--danger-glow);
 }
 
 /* Add Form */
@@ -385,12 +385,12 @@
 }
 
 .tfDeposit {
-  background: rgba(5, 150, 105, 0.08);
+  background: rgba(220, 38, 38, 0.08);
   color: var(--profit);
 }
 
 .tfWithdraw {
-  background: rgba(220, 38, 38, 0.08);
+  background: rgba(37, 99, 235, 0.08);
   color: var(--loss);
 }
 
@@ -423,8 +423,8 @@
 }
 
 .scheduleDelBtn:hover {
-  color: var(--loss);
-  background: rgba(220, 38, 38, 0.08);
+  color: var(--danger);
+  background: var(--danger-glow);
 }
 
 .noSchedules {

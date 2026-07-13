@@ -142,12 +142,12 @@
 }
 
 .deposit {
-  background: rgba(5, 150, 105, 0.08);
+  background: rgba(220, 38, 38, 0.08);
   color: var(--profit);
 }
 
 .withdraw {
-  background: rgba(220, 38, 38, 0.08);
+  background: rgba(37, 99, 235, 0.08);
   color: var(--loss);
 }
 
@@ -213,8 +213,8 @@
 }
 
 .deleteBtn:hover {
-  color: var(--loss);
-  background: rgba(220, 38, 38, 0.08);
+  color: var(--danger);
+  background: var(--danger-glow);
 }
 
 .emptyState {

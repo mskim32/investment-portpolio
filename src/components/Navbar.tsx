@@ -156,7 +156,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={handleResetClick}
             className={`btn btn-secondary ${styles.actionBtn}`}
-            style={{ color: "var(--loss)", borderColor: "rgba(220, 38, 38, 0.15)", background: "rgba(220, 38, 38, 0.05)" }}
+            style={{ color: "var(--danger)", borderColor: "rgba(220, 38, 38, 0.15)", background: "rgba(220, 38, 38, 0.05)" }}
             title="모든 데이터 초기화 (빈 포트폴리오로 시작)"
           >
             <Trash2 size={15} />

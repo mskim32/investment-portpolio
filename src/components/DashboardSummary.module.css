@@ -110,21 +110,21 @@
 }
 
 .profitBorder {
-  border-color: rgba(5, 150, 105, 0.15);
-}
-
-.profitBorder:hover {
-  border-color: rgba(5, 150, 105, 0.35);
-  box-shadow: 0 10px 30px rgba(5, 150, 105, 0.04);
-}
-
-.lossBorder {
   border-color: rgba(220, 38, 38, 0.15);
 }
 
-.lossBorder:hover {
+.profitBorder:hover {
   border-color: rgba(220, 38, 38, 0.35);
   box-shadow: 0 10px 30px rgba(220, 38, 38, 0.04);
+}
+
+.lossBorder {
+  border-color: rgba(37, 99, 235, 0.15);
+}
+
+.lossBorder:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.04);
 }
 
 /* Sparkline at the bottom of the card - dimmed for light mode */

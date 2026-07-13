@@ -135,20 +135,20 @@
 }
 
 .badgeDeposit {
-  background: rgba(5, 150, 105, 0.12);
-  color: #059669;
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
 }
 
 .badgeWithdraw {
-  background: rgba(220, 38, 38, 0.12);
-  color: #dc2626;
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
 }
 
 /* Icons */
 .iconBuy { color: #7c3aed; }
 .iconSell { color: #0891b2; }
-.iconDeposit { color: #059669; }
-.iconWithdraw { color: #dc2626; }
+.iconDeposit { color: #dc2626; }
+.iconWithdraw { color: #2563eb; }
 
 .deleteBtn {
   background: transparent;
@@ -164,8 +164,8 @@
 }
 
 .deleteBtn:hover {
-  color: var(--loss);
-  background: rgba(220, 38, 38, 0.08);
+  color: var(--danger);
+  background: var(--danger-glow);
 }
 
 .emptyState {
