@@ -9,6 +9,7 @@ import styles from "./TransactionModal.module.css";
 interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  editingTransaction?: Transaction | null;
 }
 
 // Quick suggestions for easy testing and wow factor
@@ -20,8 +21,8 @@ const SUGGESTIONS = [
   { symbol: "ETH", name: "Ethereum", assetType: "crypto" as AssetType },
 ];
 
-export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose }) => {
-  const { accounts, addTransaction } = usePortfolio();
+export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, editingTransaction }) => {
+  const { accounts, addTransaction, editTransaction } = usePortfolio();
 
   const [accountId, setAccountId] = useState("");
   const [type, setType] = useState<Transaction["type"]>("buy");
@@ -78,27 +79,36 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
     setActiveSearchField(null);
   };
 
-  // Default setup on open
+  // Default setup on open or when editingTransaction changes
   useEffect(() => {
     if (isOpen) {
-      if (accounts.length > 0 && !accountId) {
-        setAccountId(accounts[0].id);
+      if (editingTransaction) {
+        setAccountId(editingTransaction.accountId);
+        setType(editingTransaction.type);
+        setAssetType(editingTransaction.assetType);
+        setSymbol(editingTransaction.symbol);
+        setName(editingTransaction.name);
+        setQuantity(editingTransaction.quantity > 0 ? editingTransaction.quantity.toString() : "");
+        setPrice(editingTransaction.price.toString());
+        setFee(editingTransaction.fee ? editingTransaction.fee.toString() : "");
+        setDate(editingTransaction.date);
+      } else {
+        if (accounts.length > 0) {
+          setAccountId(accounts[0].id);
+        }
+        setType("buy");
+        setAssetType("stock_kr");
+        setSymbol("");
+        setName("");
+        setQuantity("");
+        setPrice("");
+        setFee("");
+        // Default date to today
+        const today = new Date().toISOString().split("T")[0];
+        setDate(today);
       }
-      // Default date to today
-      const today = new Date().toISOString().split("T")[0];
-      setDate(today);
     }
-  }, [isOpen, accounts, accountId]);
-
-  // Adjust asset type when transaction type shifts to deposit/withdraw
-  useEffect(() => {
-    if (type === "deposit" || type === "withdraw") {
-      setAssetType("cash");
-    } else {
-      // Default back to stock if changing back to trades
-      setAssetType("stock_kr");
-    }
-  }, [type]);
+  }, [isOpen, editingTransaction, accounts]);
 
   if (!isOpen) return null;
 
@@ -134,7 +144,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
       }
     }
 
-    addTransaction({
+    const txData = {
       accountId,
       type,
       assetType,
@@ -144,7 +154,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
       price: priceVal,
       date,
       fee: feeVal > 0 ? feeVal : undefined,
-    });
+    };
+
+    if (editingTransaction) {
+      editTransaction(editingTransaction.id, txData);
+    } else {
+      addTransaction(txData);
+    }
 
     // Reset Form
     setSymbol("");
@@ -164,7 +180,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
         <div className={styles.header}>
           <div className={styles.titleRow}>
             <Plus size={18} className={styles.headerIcon} />
-            <h3 className={styles.title}>거래 기록 등록</h3>
+            <h3 className={styles.title}>{editingTransaction ? "거래 기록 수정" : "거래 기록 등록"}</h3>
           </div>
           <button onClick={onClose} className={styles.closeBtn}>
             <X size={18} />
@@ -201,7 +217,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                   <button
                     key={t}
                     type="button"
-                    onClick={() => setType(t)}
+                    onClick={() => {
+                      setType(t);
+                      if (t === "deposit" || t === "withdraw") {
+                        setAssetType("cash");
+                      } else if (assetType === "cash") {
+                        setAssetType("stock_kr");
+                      }
+                    }}
                     className={`${styles.typeBtn} ${type === t ? styles[`typeActive_${t}`] : ""}`}
                   >
                     {t === "buy" ? "매수" : t === "sell" ? "매도" : t === "deposit" ? "입금" : "출금"}
@@ -453,7 +476,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                 취소
               </button>
               <button type="submit" className="btn btn-primary">
-                기록 저장
+                {editingTransaction ? "기록 수정" : "기록 저장"}
               </button>
             </div>
           </form>

@@ -168,6 +168,31 @@
   background: var(--danger-glow);
 }
 
+.actionGroup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.editBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.editBtn:hover {
+  color: var(--primary);
+  background: var(--primary-glow);
+}
+
 .emptyState {
   display: flex;
   justify-content: center;

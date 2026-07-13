@@ -20,6 +20,7 @@ interface PortfolioContextType {
   deleteAccount: (id: string) => void;
   addTransaction: (transaction: Omit<Transaction, "id">) => void;
   deleteTransaction: (id: string) => void;
+  editTransaction: (id: string, transaction: Omit<Transaction, "id">) => void;
   setPrice: (symbol: string, price: number, change24h: number) => void;
   setSelectedAccountId: (id: string | null) => void;
   setActiveCurrency: (currency: "KRW" | "USD") => void;
@@ -352,6 +353,63 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setTransactions((prev) => prev.filter((t) => t.id !== id));
   };
 
+  // Edit Transaction & Adjust Account Cash Balance
+  const editTransaction = (id: string, updatedTx: Omit<Transaction, "id">) => {
+    const oldTx = transactions.find((t) => t.id === id);
+    if (!oldTx) return;
+
+    setAccounts((prevAccounts) =>
+      prevAccounts.map((acc) => {
+        let cash = acc.cash;
+
+        // 1. Revert old transaction cash flow
+        if (acc.id === oldTx.accountId) {
+          let revertDelta = 0;
+          const oldTotal = oldTx.quantity * oldTx.price;
+          const oldFee = oldTx.fee || 0;
+
+          if (oldTx.type === "buy") {
+            revertDelta = oldTotal + oldFee;
+          } else if (oldTx.type === "sell") {
+            revertDelta = -(oldTotal - oldFee);
+          } else if (oldTx.type === "deposit") {
+            revertDelta = -oldTx.price;
+          } else if (oldTx.type === "withdraw") {
+            revertDelta = oldTx.price;
+          }
+          cash += revertDelta;
+        }
+
+        // 2. Apply new transaction cash flow
+        if (acc.id === updatedTx.accountId) {
+          let applyDelta = 0;
+          const newTotal = updatedTx.quantity * updatedTx.price;
+          const newFee = updatedTx.fee || 0;
+
+          if (updatedTx.type === "buy") {
+            applyDelta = -(newTotal + newFee);
+          } else if (updatedTx.type === "sell") {
+            applyDelta = newTotal - newFee;
+          } else if (updatedTx.type === "deposit") {
+            applyDelta = updatedTx.price;
+          } else if (updatedTx.type === "withdraw") {
+            applyDelta = -updatedTx.price;
+          }
+          cash += applyDelta;
+        }
+
+        return {
+          ...acc,
+          cash,
+        };
+      })
+    );
+
+    setTransactions((prev) =>
+      prev.map((t) => (t.id === id ? { ...updatedTx, id } : t))
+    );
+  };
+
   const setPrice = (symbol: string, price: number, change24h: number) => {
     setPrices((prev) => ({
       ...prev,
@@ -678,6 +736,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         deleteAccount,
         addTransaction,
         deleteTransaction,
+        editTransaction,
         setPrice,
         setSelectedAccountId,
         setActiveCurrency,

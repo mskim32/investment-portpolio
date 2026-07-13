@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { Transaction } from "@/types/portfolio";
 import { PortfolioProvider } from "@/context/PortfolioContext";
 import { Navbar } from "@/components/Navbar";
 import { DashboardSummary } from "@/components/DashboardSummary";
@@ -14,6 +15,7 @@ import { MarketIndices } from "@/components/MarketIndices";
 
 export default function Home() {
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   return (
     <PortfolioProvider>
@@ -36,8 +38,16 @@ export default function Home() {
           <div className="dashboard-grid">
             {/* Left Column: Asset list and transaction tables */}
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-              <AssetList onAddTransactionClick={() => setIsTxModalOpen(true)} />
-              <TransactionHistory />
+              <AssetList onAddTransactionClick={() => {
+                setEditingTransaction(null);
+                setIsTxModalOpen(true);
+              }} />
+              <TransactionHistory 
+                onEditTransactionClick={(tx) => {
+                  setEditingTransaction(tx);
+                  setIsTxModalOpen(true);
+                }} 
+              />
             </div>
 
             {/* Right Column: Donut allocation chart, account cash manager, and overall schedules */}
@@ -52,7 +62,11 @@ export default function Home() {
         {/* Floating Transaction Logger Modal */}
         <TransactionModal 
           isOpen={isTxModalOpen} 
-          onClose={() => setIsTxModalOpen(false)} 
+          onClose={() => {
+            setIsTxModalOpen(false);
+            setEditingTransaction(null);
+          }} 
+          editingTransaction={editingTransaction}
         />
       </main>
     </PortfolioProvider>

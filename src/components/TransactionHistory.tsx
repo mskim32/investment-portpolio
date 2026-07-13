@@ -3,10 +3,14 @@
 import React, { useState } from "react";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { Transaction } from "@/types/portfolio";
-import { Trash2, History, ArrowUpRight, ArrowDownRight, CornerDownLeft, CornerUpRight } from "lucide-react";
+import { Trash2, Edit2, History, ArrowUpRight, ArrowDownRight, CornerDownLeft, CornerUpRight } from "lucide-react";
 import styles from "./TransactionHistory.module.css";
 
-export const TransactionHistory: React.FC = () => {
+interface TransactionHistoryProps {
+  onEditTransactionClick: (tx: Transaction) => void;
+}
+
+export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ onEditTransactionClick }) => {
   const {
     transactions,
     accounts,
@@ -166,17 +170,26 @@ export const TransactionHistory: React.FC = () => {
                         {formatCurrency(totalAmount, currency)}
                       </td>
                       <td style={{ textAlign: "center" }}>
-                        <button
-                          onClick={() => {
-                            if (confirm("정말로 이 거래 내역을 삭제하시겠습니까? 계좌 잔고가 되돌아갑니다.")) {
-                              deleteTransaction(tx.id);
-                            }
-                          }}
-                          className={styles.deleteBtn}
-                          title="삭제"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        <div className={styles.actionGroup}>
+                          <button
+                            onClick={() => onEditTransactionClick(tx)}
+                            className={styles.editBtn}
+                            title="수정"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm("정말로 이 거래 내역을 삭제하시겠습니까? 계좌 잔고가 되돌아갑니다.")) {
+                                deleteTransaction(tx.id);
+                              }
+                            }}
+                            className={styles.deleteBtn}
+                            title="삭제"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -197,16 +210,26 @@ export const TransactionHistory: React.FC = () => {
                 <div key={tx.id} className={styles.mobileCard}>
                   <div className={styles.mobileCardHeader}>
                     <span className={styles.mobileDate}>{tx.date}</span>
-                    <button
-                      onClick={() => {
-                        if (confirm("정말로 이 거래 내역을 삭제하시겠습니까? 계좌 잔고가 되돌아갑니다.")) {
-                          deleteTransaction(tx.id);
-                        }
-                      }}
-                      className={styles.deleteBtn}
-                    >
-                      <Trash2 size={13} />
-                    </button>
+                    <div className={styles.actionGroup}>
+                      <button
+                        onClick={() => onEditTransactionClick(tx)}
+                        className={styles.editBtn}
+                        title="수정"
+                      >
+                        <Edit2 size={13} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm("정말로 이 거래 내역을 삭제하시겠습니까? 계좌 잔고가 되돌아갑니다.")) {
+                            deleteTransaction(tx.id);
+                          }
+                        }}
+                        className={styles.deleteBtn}
+                        title="삭제"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </div>
                   
                   <div className={styles.mobileCardMain}>
