@@ -200,6 +200,11 @@
   color: #d97706;
 }
 
+.badgeEtc {
+  background: rgba(245, 158, 11, 0.08);
+  color: #f59e0b;
+}
+
 .priceContainer {
   display: flex;
   flex-direction: column;

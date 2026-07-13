@@ -52,10 +52,11 @@ export const AssetAllocation: React.FC = () => {
     if (totalAssetsValue === 0) return [];
 
     if (groupMode === "type") {
-      // Group by Asset Class: KR Stocks, US Stocks, Crypto, Cash
+      // Group by Asset Class: KR Stocks, US Stocks, Crypto, ETC, Cash
       let krStockVal = 0;
       let usStockVal = 0;
       let cryptoVal = 0;
+      let etcVal = 0;
       let cashVal = 0;
 
       // Holdings
@@ -64,6 +65,7 @@ export const AssetAllocation: React.FC = () => {
         if (h.assetType === "stock_kr") krStockVal += val;
         else if (h.assetType === "stock_us") usStockVal += val;
         else if (h.assetType === "crypto") cryptoVal += val;
+        else if (h.assetType === "etc") etcVal += val;
       });
 
       // Cash
@@ -79,6 +81,7 @@ export const AssetAllocation: React.FC = () => {
         { id: "stock_kr", name: "한국 주식", value: krStockVal, color: "#6366F1" },
         { id: "stock_us", name: "미국 주식", value: usStockVal, color: "#3B82F6" },
         { id: "crypto", name: "암호화폐", value: cryptoVal, color: "#10B981" },
+        { id: "etc", name: "기타/수기 자산", value: etcVal, color: "#F59E0B" },
         { id: "cash", name: "현금성 자산", value: cashVal, color: "#94a3b8" },
       ];
 
@@ -116,9 +119,10 @@ export const AssetAllocation: React.FC = () => {
         for (const symbol in holdingsMap) {
           const qty = holdingsMap[symbol];
           if (qty > 0) {
-            const currentPrice = prices[symbol]?.price || 0;
+            const matchingHolding = holdings.find((h) => h.symbol === symbol);
+            const currentPrice = matchingHolding ? matchingHolding.currentPrice : (prices[symbol]?.price || 0);
             const assetType = accTxs.find((t) => t.symbol === symbol)?.assetType;
-            const currency = assetType === "stock_kr" ? "KRW" : "USD";
+            const currency = matchingHolding?.currency || (assetType === "stock_kr" ? "KRW" : "USD");
             const val = toActiveCurrency(qty * currentPrice, currency);
             accValues[acc.id] += val;
           }

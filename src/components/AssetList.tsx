@@ -60,6 +60,7 @@ export const AssetList: React.FC<AssetListProps> = ({ onAddTransactionClick }) =
       case "stock_kr": return styles.badgeKr;
       case "stock_us": return styles.badgeUs;
       case "crypto": return styles.badgeCrypto;
+      case "etc": return styles.badgeEtc;
       default: return styles.badgeCash;
     }
   };
@@ -69,6 +70,7 @@ export const AssetList: React.FC<AssetListProps> = ({ onAddTransactionClick }) =
       case "stock_kr": return "국내주식";
       case "stock_us": return "미국주식";
       case "crypto": return "가상자산";
+      case "etc": return "기타/수기";
       default: return "현금";
     }
   };
@@ -159,6 +161,12 @@ export const AssetList: React.FC<AssetListProps> = ({ onAddTransactionClick }) =
           className={`${styles.tabBtn} ${activeTab === "crypto" ? styles.tabActive : ""}`}
         >
           가상자산
+        </button>
+        <button
+          onClick={() => setActiveTab("etc")}
+          className={`${styles.tabBtn} ${activeTab === "etc" ? styles.tabActive : ""}`}
+        >
+          기타/수기
         </button>
       </div>
 

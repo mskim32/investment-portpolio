@@ -1,4 +1,4 @@
-export type AssetType = "stock_kr" | "stock_us" | "crypto" | "cash";
+export type AssetType = "stock_kr" | "stock_us" | "crypto" | "cash" | "etc";
 
 export interface AutoTransfer {
   id: string;

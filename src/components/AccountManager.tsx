@@ -513,6 +513,7 @@ export const AccountManager: React.FC = () => {
                             <option value="stock_kr">국내주식</option>
                             <option value="stock_us">미국주식</option>
                             <option value="crypto">가상자산</option>
+                            <option value="etc">기타/수기 자산</option>
                           </select>
                         </div>
 

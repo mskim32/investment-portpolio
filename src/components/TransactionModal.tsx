@@ -42,7 +42,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
   useEffect(() => {
     const query = activeSearchField === "symbol" ? symbol : activeSearchField === "name" ? name : "";
     
-    if (!query.trim() || (activeSearchField === "symbol" && symbol === name) || (activeSearchField === "name" && name === symbol)) {
+    if (assetType === "etc" || !query.trim() || (activeSearchField === "symbol" && symbol === name) || (activeSearchField === "name" && name === symbol)) {
       setSearchResults([]);
       return;
     }
@@ -219,6 +219,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                     <option value="stock_us">미국 주식</option>
                     <option value="stock_kr">한국 주식</option>
                     <option value="crypto">암호화폐</option>
+                    <option value="etc">기타/수기 자산</option>
                   </select>
                 </div>
 
@@ -246,7 +247,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                     <div className={styles.autocompleteContainer}>
                       <input
                         type="text"
-                        placeholder="예: AAPL, 005930.KS"
+                        placeholder={assetType === "etc" ? "예: BOND-1, SH-BANK (자유 입력)" : "예: AAPL, 005930.KS"}
                         value={symbol}
                         onChange={(e) => {
                           setSymbol(e.target.value);
@@ -287,7 +288,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                                   ? "한국 주식"
                                   : quote.assetType === "stock_us"
                                   ? "미국 주식"
-                                  : "암호화폐"}
+                                  : quote.assetType === "crypto"
+                                  ? "가상자산"
+                                  : "기타/수기"}
                               </span>
                             </button>
                           ))}
@@ -307,7 +310,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                     <div className={styles.autocompleteContainer}>
                       <input
                         type="text"
-                        placeholder="예: 애플, 삼성전자"
+                        placeholder={assetType === "etc" ? "예: 국고채3년, 신한은행 예금 (자유 입력)" : "예: 애플, 삼성전자"}
                         value={name}
                         onChange={(e) => {
                           setName(e.target.value);
@@ -348,7 +351,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                                   ? "한국 주식"
                                   : quote.assetType === "stock_us"
                                   ? "미국 주식"
-                                  : "암호화폐"}
+                                  : quote.assetType === "crypto"
+                                  ? "가상자산"
+                                  : "기타/수기"}
                               </span>
                             </button>
                           ))}

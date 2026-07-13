@@ -549,10 +549,11 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // Find current price in cache or fallback to avg purchase price
       const currency = h.currency;
       const priceInfo = prices[symbol];
-      let currentPrice = priceInfo?.price || (h.cost / h.qty);
+      const hasValidPrice = priceInfo && priceInfo.price > 0;
+      let currentPrice = hasValidPrice ? priceInfo.price : (h.cost / h.qty);
 
       // Convert fetched price currency (e.g. USD for BTC-USD) to holding's currency (e.g. KRW) if they differ
-      if (priceInfo) {
+      if (hasValidPrice) {
         const priceCurrency = priceInfo.currency || (symbol.endsWith(".KS") || symbol.endsWith(".KQ") ? "KRW" : "USD");
         if (priceCurrency === "USD" && currency === "KRW") {
           currentPrice *= exchangeRate;
