@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       }
 
       const price = meta.regularMarketPrice;
-      const prevClose = meta.previousClose || price;
+      const prevClose = meta.previousClose || meta.chartPreviousClose || price;
       const change24h = prevClose !== 0 ? ((price - prevClose) / prevClose) * 100 : 0;
       const currency = meta.currency || (symbol.endsWith(".KS") || symbol.endsWith(".KQ") ? "KRW" : "USD");
 
@@ -77,7 +77,7 @@ export async function GET(request: Request) {
         const meta = data?.chart?.result?.[0]?.meta;
         if (meta?.regularMarketPrice) {
           const price = meta.regularMarketPrice;
-          const prevClose = meta.previousClose || price;
+          const prevClose = meta.previousClose || meta.chartPreviousClose || price;
           const change24h = prevClose !== 0 ? ((price - prevClose) / prevClose) * 100 : 0;
           results["KRW=X"] = {
             price,
