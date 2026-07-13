@@ -26,6 +26,8 @@ export const AssetList: React.FC<AssetListProps> = ({ onAddTransactionClick }) =
     sortBy,
     setSortBy,
     isLoadingPrices,
+    accounts,
+    restoreSampleData,
   } = usePortfolio();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -161,7 +163,33 @@ export const AssetList: React.FC<AssetListProps> = ({ onAddTransactionClick }) =
       </div>
 
       {/* Main Content */}
-      {filteredHoldings.length === 0 ? (
+      {accounts.length === 0 ? (
+        <div className={styles.emptyState}>
+          <div className={styles.onboardingCard}>
+            <h4 className={styles.onboardingTitle}>시작하기</h4>
+            <p className={styles.onboardingText}>
+              등록된 계좌가 없습니다. 자산 관리를 시작하기 위해 먼저 계좌를 등록하고 거래 기록을 추가하거나, 아래 버튼을 눌러 샘플 데이터를 불러와 둘러보세요.
+            </p>
+            <div className={styles.onboardingActions}>
+              <button 
+                onClick={onAddTransactionClick}
+                className="btn btn-primary btn-sm"
+              >
+                <Plus size={14} /> 첫 거래 기록 추가
+              </button>
+              <button 
+                onClick={() => {
+                  restoreSampleData();
+                  alert("샘플 포트폴리오 데이터가 정상적으로 복원되었습니다.");
+                }}
+                className="btn btn-secondary btn-sm"
+              >
+                샘플 데이터 불러오기
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : filteredHoldings.length === 0 ? (
         <div className={styles.emptyState}>
           <span>검색된 조건의 보유 자산이 없습니다.</span>
         </div>

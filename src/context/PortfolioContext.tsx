@@ -29,6 +29,7 @@ interface PortfolioContextType {
   exportData: () => void;
   importData: (jsonData: string) => boolean;
   clearAllData: () => void;
+  restoreSampleData: () => void;
   addAutoTransfer: (accountId: string, transfer: Omit<AutoTransfer, "id">) => void;
   deleteAutoTransfer: (accountId: string, transferId: string) => void;
   addAutoBuy: (accountId: string, autoBuy: Omit<AutoBuy, "id">) => void;
@@ -117,12 +118,23 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const storedTransactions = localStorage.getItem("portfolio_transactions");
       const storedPrices = localStorage.getItem("portfolio_prices");
       const storedCurrency = localStorage.getItem("portfolio_currency");
+      const isInitialized = localStorage.getItem("portfolio_initialized");
 
-      if (storedAccounts) setAccounts(JSON.parse(storedAccounts));
-      else setAccounts(INITIAL_ACCOUNTS);
-
-      if (storedTransactions) setTransactions(JSON.parse(storedTransactions));
-      else setTransactions(INITIAL_TRANSACTIONS);
+      if (isInitialized === "true") {
+        setAccounts(storedAccounts ? JSON.parse(storedAccounts) : []);
+        setTransactions(storedTransactions ? JSON.parse(storedTransactions) : []);
+      } else {
+        // First time visit: Seed dummy data and mark as initialized
+        setAccounts(INITIAL_ACCOUNTS);
+        setTransactions(INITIAL_TRANSACTIONS);
+        try {
+          localStorage.setItem("portfolio_initialized", "true");
+          localStorage.setItem("portfolio_accounts", JSON.stringify(INITIAL_ACCOUNTS));
+          localStorage.setItem("portfolio_transactions", JSON.stringify(INITIAL_TRANSACTIONS));
+        } catch (e) {
+          console.warn("localStorage write failed:", e);
+        }
+      }
 
       if (storedPrices) {
         const parsedPrices = JSON.parse(storedPrices);
@@ -150,22 +162,38 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Save to local storage when state changes
   useEffect(() => {
     if (!isLoaded) return;
-    localStorage.setItem("portfolio_accounts", JSON.stringify(accounts));
+    try {
+      localStorage.setItem("portfolio_accounts", JSON.stringify(accounts));
+    } catch (e) {
+      console.warn("Failed to save accounts to localStorage", e);
+    }
   }, [accounts, isLoaded]);
 
   useEffect(() => {
     if (!isLoaded) return;
-    localStorage.setItem("portfolio_transactions", JSON.stringify(transactions));
+    try {
+      localStorage.setItem("portfolio_transactions", JSON.stringify(transactions));
+    } catch (e) {
+      console.warn("Failed to save transactions to localStorage", e);
+    }
   }, [transactions, isLoaded]);
 
   useEffect(() => {
     if (!isLoaded) return;
-    localStorage.setItem("portfolio_prices", JSON.stringify(prices));
+    try {
+      localStorage.setItem("portfolio_prices", JSON.stringify(prices));
+    } catch (e) {
+      console.warn("Failed to save prices to localStorage", e);
+    }
   }, [prices, isLoaded]);
 
   useEffect(() => {
     if (!isLoaded) return;
-    localStorage.setItem("portfolio_currency", activeCurrency);
+    try {
+      localStorage.setItem("portfolio_currency", activeCurrency);
+    } catch (e) {
+      console.warn("Failed to save currency to localStorage", e);
+    }
   }, [activeCurrency, isLoaded]);
 
   // Add Account
@@ -444,9 +472,30 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setAccounts([]);
     setTransactions([]);
     setPrices({});
-    localStorage.setItem("portfolio_accounts", JSON.stringify([]));
-    localStorage.setItem("portfolio_transactions", JSON.stringify([]));
-    localStorage.setItem("portfolio_prices", JSON.stringify({}));
+    try {
+      localStorage.setItem("portfolio_accounts", JSON.stringify([]));
+      localStorage.setItem("portfolio_transactions", JSON.stringify([]));
+      localStorage.setItem("portfolio_prices", JSON.stringify({}));
+      localStorage.setItem("portfolio_initialized", "true");
+    } catch (e) {
+      console.warn("Failed to clear data in localStorage", e);
+    }
+  };
+
+  // Restore Sample Data
+  const restoreSampleData = () => {
+    setAccounts(INITIAL_ACCOUNTS);
+    setTransactions(INITIAL_TRANSACTIONS);
+    setPrices(INITIAL_PRICES);
+    setExchangeRate(INITIAL_PRICES["KRW=X"].price);
+    try {
+      localStorage.setItem("portfolio_accounts", JSON.stringify(INITIAL_ACCOUNTS));
+      localStorage.setItem("portfolio_transactions", JSON.stringify(INITIAL_TRANSACTIONS));
+      localStorage.setItem("portfolio_prices", JSON.stringify(INITIAL_PRICES));
+      localStorage.setItem("portfolio_initialized", "true");
+    } catch (e) {
+      console.warn("Failed to restore sample data in localStorage", e);
+    }
   };
 
   // ==========================================
@@ -637,6 +686,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         exportData,
         importData,
         clearAllData,
+        restoreSampleData,
         holdings: computedHoldings,
         addAutoTransfer,
         deleteAutoTransfer,
