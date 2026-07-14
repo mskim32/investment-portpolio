@@ -260,7 +260,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                       onChange={(e) => {
                         const newAssetType = e.target.value as AssetType;
                         setAssetType(newAssetType);
-                        setCurrency(newAssetType === "stock_kr" ? "KRW" : "USD");
+                        if (newAssetType === "stock_kr") {
+                          setCurrency("KRW");
+                        } else if (newAssetType === "stock_us") {
+                          setCurrency("USD");
+                        } else {
+                          const activeAccount = accounts.find((a) => a.id === accountId);
+                          setCurrency(activeAccount?.currency || "KRW");
+                        }
                       }}
                     >
                       <option value="stock_us">미국 주식</option>
@@ -270,7 +277,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                     </select>
                   </div>
 
-                  {assetType === "stock_us" ? (
+                  {assetType === "stock_us" || assetType === "etc" ? (
                     <div className={styles.formGroup}>
                       <label className={styles.label}>거래 통화</label>
                       <div className={styles.typeSelector}>
