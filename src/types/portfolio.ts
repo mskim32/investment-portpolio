@@ -41,6 +41,7 @@ export interface Transaction {
   price: number; // price per unit in the asset's currency (or transaction amount for cash)
   date: string; // YYYY-MM-DD
   fee?: number;
+  customYield?: number; // Manual yield for etc assets (in %)
 }
 
 export interface AssetHolding {

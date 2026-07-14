@@ -422,7 +422,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const uniqueSymbols = Array.from(
       new Set(
         transactions
-          .filter((t) => t.type === "buy" || t.type === "sell")
+          .filter((t) => (t.type === "buy" || t.type === "sell") && t.assetType !== "etc" && !t.symbol.startsWith("ETC_"))
           .map((t) => t.symbol)
       )
     );
@@ -608,15 +608,32 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const currency = h.currency;
       const priceInfo = prices[symbol];
       const hasValidPrice = priceInfo && priceInfo.price > 0;
-      let currentPrice = hasValidPrice ? priceInfo.price : (h.cost / h.qty);
+      
+      const avgBuyPrice = h.cost / h.qty;
+      let currentPrice = avgBuyPrice;
+      let isManualYield = false;
 
-      // Convert fetched price currency (e.g. USD for BTC-USD) to holding's currency (e.g. KRW) if they differ
-      if (hasValidPrice) {
-        const priceCurrency = priceInfo.currency || (symbol.endsWith(".KS") || symbol.endsWith(".KQ") ? "KRW" : "USD");
-        if (priceCurrency === "USD" && currency === "KRW") {
-          currentPrice *= exchangeRate;
-        } else if (priceCurrency === "KRW" && currency === "USD") {
-          currentPrice /= exchangeRate;
+      if (h.type === "etc") {
+        const symbolTxs = sortedTxs.filter((t) => t.symbol === symbol);
+        const latestTxWithYield = [...symbolTxs].reverse().find((t) => t.customYield !== undefined);
+        if (latestTxWithYield && latestTxWithYield.customYield !== undefined) {
+          currentPrice = avgBuyPrice * (1 + latestTxWithYield.customYield / 100);
+          isManualYield = true;
+        }
+      }
+
+      if (!isManualYield) {
+        if (hasValidPrice) {
+          currentPrice = priceInfo.price;
+          // Convert fetched price currency (e.g. USD for BTC-USD) to holding's currency (e.g. KRW) if they differ
+          const priceCurrency = priceInfo.currency || (symbol.endsWith(".KS") || symbol.endsWith(".KQ") ? "KRW" : "USD");
+          if (priceCurrency === "USD" && currency === "KRW") {
+            currentPrice *= exchangeRate;
+          } else if (priceCurrency === "KRW" && currency === "USD") {
+            currentPrice /= exchangeRate;
+          }
+        } else {
+          currentPrice = avgBuyPrice;
         }
       }
 

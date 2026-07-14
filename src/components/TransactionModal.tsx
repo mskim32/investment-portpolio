@@ -33,6 +33,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
   const [price, setPrice] = useState("");
   const [fee, setFee] = useState("");
   const [date, setDate] = useState("");
+  const [customYield, setCustomYield] = useState("");
 
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -92,6 +93,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
         setPrice(editingTransaction.price.toString());
         setFee(editingTransaction.fee ? editingTransaction.fee.toString() : "");
         setDate(editingTransaction.date);
+        setCustomYield(editingTransaction.customYield !== undefined ? editingTransaction.customYield.toString() : "");
       } else {
         if (accounts.length > 0) {
           setAccountId(accounts[0].id);
@@ -103,6 +105,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
         setQuantity("");
         setPrice("");
         setFee("");
+        setCustomYield("");
         // Default date to today
         const today = new Date().toISOString().split("T")[0];
         setDate(today);
@@ -132,8 +135,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
     const isTrade = type === "buy" || type === "sell";
 
     if (isTrade) {
-      if (!symbol.trim() || !name.trim() || qtyVal <= 0 || priceVal <= 0) {
-        alert("모든 자산 상세 정보(심볼, 이름, 수량, 가격)를 입력해 주세요.");
+      const isSymbolRequired = assetType !== "etc";
+      if ((isSymbolRequired && !symbol.trim()) || !name.trim() || qtyVal <= 0 || priceVal <= 0) {
+        alert(isSymbolRequired ? "모든 자산 상세 정보(심볼, 이름, 수량, 가격)를 입력해 주세요." : "자산 이름, 수량, 가격을 모두 입력해 주세요.");
         return;
       }
     } else {
@@ -148,12 +152,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
       accountId,
       type,
       assetType,
-      symbol: isTrade ? symbol.trim().toUpperCase() : "CASH",
+      symbol: isTrade ? (assetType === "etc" ? `ETC_${name.trim()}` : symbol.trim().toUpperCase()) : "CASH",
       name: isTrade ? name.trim() : `${type === "deposit" ? "입금" : "출금"}`,
       quantity: isTrade ? qtyVal : 0,
       price: priceVal,
       date,
       fee: feeVal > 0 ? feeVal : undefined,
+      customYield: isTrade && assetType === "etc" && customYield.trim() !== "" ? Number(customYield) : undefined,
     };
 
     if (editingTransaction) {
@@ -168,6 +173,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
     setQuantity("");
     setPrice("");
     setFee("");
+    setCustomYield("");
     onClose();
   };
 
@@ -265,131 +271,147 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
 
                 {/* Symbol & Name */}
                 <div className={styles.formRow}>
-                  <div className={styles.formGroup} style={{ position: "relative" }}>
-                    <label className={styles.label}>티커/심볼</label>
-                    <div className={styles.autocompleteContainer}>
+                  {assetType !== "etc" ? (
+                    <>
+                      <div className={styles.formGroup} style={{ position: "relative" }}>
+                        <label className={styles.label}>티커/심볼</label>
+                        <div className={styles.autocompleteContainer}>
+                          <input
+                            type="text"
+                            placeholder="예: AAPL, 005930.KS"
+                            value={symbol}
+                            onChange={(e) => {
+                              setSymbol(e.target.value);
+                              setActiveSearchField("symbol");
+                            }}
+                            onFocus={() => {
+                              setActiveSearchField("symbol");
+                              if (searchResults.length > 0) setShowDropdown(true);
+                            }}
+                            onBlur={() => {
+                              setTimeout(() => {
+                                setShowDropdown(false);
+                                setActiveSearchField(null);
+                              }, 200);
+                            }}
+                            required
+                            autoComplete="off"
+                          />
+
+                          {showDropdown && activeSearchField === "symbol" && searchResults.length > 0 && (
+                            <div className={styles.dropdownList}>
+                              {searchResults.map((quote) => (
+                                <button
+                                  key={quote.symbol}
+                                  type="button"
+                                  className={styles.dropdownItem}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleSelectQuote(quote);
+                                  }}
+                                >
+                                  <div className={styles.dropdownLeft}>
+                                    <span className={styles.dropdownSymbol}>{quote.symbol}</span>
+                                    <span className={styles.dropdownName}>{quote.name}</span>
+                                  </div>
+                                  <span className={`${styles.dropdownType} ${styles[`dropdownType_${quote.assetType}`]}`}>
+                                    {quote.assetType === "stock_kr"
+                                      ? "한국 주식"
+                                      : quote.assetType === "stock_us"
+                                      ? "미국 주식"
+                                      : quote.assetType === "crypto"
+                                      ? "가상자산"
+                                      : "기타/수기"}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
+                          {isSearching && activeSearchField === "symbol" && (
+                            <div className={styles.dropdownList}>
+                              <div className={styles.searchingText}>검색 중...</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className={styles.formGroup} style={{ position: "relative" }}>
+                        <label className={styles.label}>종목명</label>
+                        <div className={styles.autocompleteContainer}>
+                          <input
+                            type="text"
+                            placeholder="예: 애플, 삼성전자"
+                            value={name}
+                            onChange={(e) => {
+                              setName(e.target.value);
+                              setActiveSearchField("name");
+                            }}
+                            onFocus={() => {
+                              setActiveSearchField("name");
+                              if (searchResults.length > 0) setShowDropdown(true);
+                            }}
+                            onBlur={() => {
+                              setTimeout(() => {
+                                setShowDropdown(false);
+                                setActiveSearchField(null);
+                              }, 200);
+                            }}
+                            required
+                            autoComplete="off"
+                          />
+
+                          {showDropdown && activeSearchField === "name" && searchResults.length > 0 && (
+                            <div className={styles.dropdownList}>
+                              {searchResults.map((quote) => (
+                                <button
+                                  key={quote.symbol}
+                                  type="button"
+                                  className={styles.dropdownItem}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleSelectQuote(quote);
+                                  }}
+                                >
+                                  <div className={styles.dropdownLeft}>
+                                    <span className={styles.dropdownSymbol}>{quote.symbol}</span>
+                                    <span className={styles.dropdownName}>{quote.name}</span>
+                                  </div>
+                                  <span className={`${styles.dropdownType} ${styles[`dropdownType_${quote.assetType}`]}`}>
+                                    {quote.assetType === "stock_kr"
+                                      ? "한국 주식"
+                                      : quote.assetType === "stock_us"
+                                      ? "미국 주식"
+                                      : quote.assetType === "crypto"
+                                      ? "가상자산"
+                                      : "기타/수기"}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
+                          {isSearching && activeSearchField === "name" && (
+                            <div className={styles.dropdownList}>
+                              <div className={styles.searchingText}>검색 중...</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className={styles.formGroup} style={{ flex: "1 1 100%" }}>
+                      <label className={styles.label}>종목명</label>
                       <input
                         type="text"
-                        placeholder={assetType === "etc" ? "예: BOND-1, SH-BANK (자유 입력)" : "예: AAPL, 005930.KS"}
-                        value={symbol}
-                        onChange={(e) => {
-                          setSymbol(e.target.value);
-                          setActiveSearchField("symbol");
-                        }}
-                        onFocus={() => {
-                          setActiveSearchField("symbol");
-                          if (searchResults.length > 0) setShowDropdown(true);
-                        }}
-                        onBlur={() => {
-                          setTimeout(() => {
-                            setShowDropdown(false);
-                            setActiveSearchField(null);
-                          }, 200);
-                        }}
-                        required
-                        autoComplete="off"
-                      />
-
-                      {showDropdown && activeSearchField === "symbol" && searchResults.length > 0 && (
-                        <div className={styles.dropdownList}>
-                          {searchResults.map((quote) => (
-                            <button
-                              key={quote.symbol}
-                              type="button"
-                              className={styles.dropdownItem}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                handleSelectQuote(quote);
-                              }}
-                            >
-                              <div className={styles.dropdownLeft}>
-                                <span className={styles.dropdownSymbol}>{quote.symbol}</span>
-                                <span className={styles.dropdownName}>{quote.name}</span>
-                              </div>
-                              <span className={`${styles.dropdownType} ${styles[`dropdownType_${quote.assetType}`]}`}>
-                                {quote.assetType === "stock_kr"
-                                  ? "한국 주식"
-                                  : quote.assetType === "stock_us"
-                                  ? "미국 주식"
-                                  : quote.assetType === "crypto"
-                                  ? "가상자산"
-                                  : "기타/수기"}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {isSearching && activeSearchField === "symbol" && (
-                        <div className={styles.dropdownList}>
-                          <div className={styles.searchingText}>검색 중...</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className={styles.formGroup} style={{ position: "relative" }}>
-                    <label className={styles.label}>종목명</label>
-                    <div className={styles.autocompleteContainer}>
-                      <input
-                        type="text"
-                        placeholder={assetType === "etc" ? "예: 국고채3년, 신한은행 예금 (자유 입력)" : "예: 애플, 삼성전자"}
+                        placeholder="예: 국고채3년, 운용사 포트폴리오 자산 (자유 입력)"
                         value={name}
-                        onChange={(e) => {
-                          setName(e.target.value);
-                          setActiveSearchField("name");
-                        }}
-                        onFocus={() => {
-                          setActiveSearchField("name");
-                          if (searchResults.length > 0) setShowDropdown(true);
-                        }}
-                        onBlur={() => {
-                          setTimeout(() => {
-                            setShowDropdown(false);
-                            setActiveSearchField(null);
-                          }, 200);
-                        }}
+                        onChange={(e) => setName(e.target.value)}
                         required
                         autoComplete="off"
                       />
-
-                      {showDropdown && activeSearchField === "name" && searchResults.length > 0 && (
-                        <div className={styles.dropdownList}>
-                          {searchResults.map((quote) => (
-                            <button
-                              key={quote.symbol}
-                              type="button"
-                              className={styles.dropdownItem}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                handleSelectQuote(quote);
-                              }}
-                            >
-                              <div className={styles.dropdownLeft}>
-                                <span className={styles.dropdownSymbol}>{quote.symbol}</span>
-                                <span className={styles.dropdownName}>{quote.name}</span>
-                              </div>
-                              <span className={`${styles.dropdownType} ${styles[`dropdownType_${quote.assetType}`]}`}>
-                                {quote.assetType === "stock_kr"
-                                  ? "한국 주식"
-                                  : quote.assetType === "stock_us"
-                                  ? "미국 주식"
-                                  : quote.assetType === "crypto"
-                                  ? "가상자산"
-                                  : "기타/수기"}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {isSearching && activeSearchField === "name" && (
-                        <div className={styles.dropdownList}>
-                          <div className={styles.searchingText}>검색 중...</div>
-                        </div>
-                      )}
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Quantity & Unit Price */}
@@ -417,6 +439,23 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                     />
                   </div>
                 </div>
+
+                {/* Custom Yield for etc asset */}
+                {assetType === "etc" && (
+                  <div className={styles.formRow}>
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>운용수익률 (%)</label>
+                      <input
+                        type="number"
+                        step="any"
+                        placeholder="예: 5.5 (선택 사항)"
+                        value={customYield}
+                        onChange={(e) => setCustomYield(e.target.value)}
+                      />
+                    </div>
+                    <div className={styles.formGroup} style={{ visibility: "hidden" }} />
+                  </div>
+                )}
 
                 {/* Fee & Date */}
                 <div className={styles.formRow}>
