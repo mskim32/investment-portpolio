@@ -42,6 +42,7 @@ export interface Transaction {
   date: string; // YYYY-MM-DD
   fee?: number;
   customYield?: number; // Manual yield for etc assets (in %)
+  currency?: "KRW" | "USD"; // Transaction price/fee currency
 }
 
 export interface AssetHolding {

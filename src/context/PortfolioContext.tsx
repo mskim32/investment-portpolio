@@ -289,27 +289,34 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       prevAccounts.map((acc) => {
         if (acc.id !== tx.accountId) return acc;
 
-        let cashDelta = 0;
+        let cashDeltaInTxCurrency = 0;
         const totalTradeAmount = tx.quantity * tx.price;
         const fee = tx.fee || 0;
 
         // Cash flow logic
         if (tx.type === "buy") {
           // Buying stocks/crypto: deduct cash (fees add to cost)
-          cashDelta = -(totalTradeAmount + fee);
+          cashDeltaInTxCurrency = -(totalTradeAmount + fee);
         } else if (tx.type === "sell") {
           // Selling stocks/crypto: add cash (fees deduct from payout)
-          cashDelta = totalTradeAmount - fee;
+          cashDeltaInTxCurrency = totalTradeAmount - fee;
         } else if (tx.type === "deposit") {
           // Cash deposit: add cash (price field represents deposit amount)
-          cashDelta = tx.price;
+          cashDeltaInTxCurrency = tx.price;
         } else if (tx.type === "withdraw") {
           // Cash withdrawal: deduct cash (price field represents withdrawal amount)
-          cashDelta = -tx.price;
+          cashDeltaInTxCurrency = -tx.price;
         }
 
-        // Handle currency differences:
-        // Transactions should be recorded in the account's currency.
+        // Convert cashDeltaInTxCurrency to account currency if they differ
+        const txCurrency = tx.currency || (tx.assetType === "stock_kr" ? "KRW" : "USD");
+        let cashDelta = cashDeltaInTxCurrency;
+        if (txCurrency === "USD" && acc.currency === "KRW") {
+          cashDelta = cashDeltaInTxCurrency * exchangeRate;
+        } else if (txCurrency === "KRW" && acc.currency === "USD") {
+          cashDelta = cashDeltaInTxCurrency / exchangeRate;
+        }
+
         return {
           ...acc,
           cash: acc.cash + cashDelta,
@@ -328,19 +335,27 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       prevAccounts.map((acc) => {
         if (acc.id !== tx.accountId) return acc;
 
-        let cashDelta = 0;
+        let cashDeltaInTxCurrency = 0;
         const totalTradeAmount = tx.quantity * tx.price;
         const fee = tx.fee || 0;
 
         // Reverse cash flow
         if (tx.type === "buy") {
-          cashDelta = totalTradeAmount + fee;
+          cashDeltaInTxCurrency = totalTradeAmount + fee;
         } else if (tx.type === "sell") {
-          cashDelta = -(totalTradeAmount - fee);
+          cashDeltaInTxCurrency = -(totalTradeAmount - fee);
         } else if (tx.type === "deposit") {
-          cashDelta = -tx.price;
+          cashDeltaInTxCurrency = -tx.price;
         } else if (tx.type === "withdraw") {
-          cashDelta = tx.price;
+          cashDeltaInTxCurrency = tx.price;
+        }
+
+        const txCurrency = tx.currency || (tx.assetType === "stock_kr" ? "KRW" : "USD");
+        let cashDelta = cashDeltaInTxCurrency;
+        if (txCurrency === "USD" && acc.currency === "KRW") {
+          cashDelta = cashDeltaInTxCurrency * exchangeRate;
+        } else if (txCurrency === "KRW" && acc.currency === "USD") {
+          cashDelta = cashDeltaInTxCurrency / exchangeRate;
         }
 
         return {
@@ -364,36 +379,52 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
         // 1. Revert old transaction cash flow
         if (acc.id === oldTx.accountId) {
-          let revertDelta = 0;
+          const oldTxCurrency = oldTx.currency || (oldTx.assetType === "stock_kr" ? "KRW" : "USD");
           const oldTotal = oldTx.quantity * oldTx.price;
           const oldFee = oldTx.fee || 0;
 
+          let revertDeltaInTxCurrency = 0;
           if (oldTx.type === "buy") {
-            revertDelta = oldTotal + oldFee;
+            revertDeltaInTxCurrency = oldTotal + oldFee;
           } else if (oldTx.type === "sell") {
-            revertDelta = -(oldTotal - oldFee);
+            revertDeltaInTxCurrency = -(oldTotal - oldFee);
           } else if (oldTx.type === "deposit") {
-            revertDelta = -oldTx.price;
+            revertDeltaInTxCurrency = -oldTx.price;
           } else if (oldTx.type === "withdraw") {
-            revertDelta = oldTx.price;
+            revertDeltaInTxCurrency = oldTx.price;
+          }
+
+          let revertDelta = revertDeltaInTxCurrency;
+          if (oldTxCurrency === "USD" && acc.currency === "KRW") {
+            revertDelta = revertDeltaInTxCurrency * exchangeRate;
+          } else if (oldTxCurrency === "KRW" && acc.currency === "USD") {
+            revertDelta = revertDeltaInTxCurrency / exchangeRate;
           }
           cash += revertDelta;
         }
 
         // 2. Apply new transaction cash flow
         if (acc.id === updatedTx.accountId) {
-          let applyDelta = 0;
+          const newTxCurrency = updatedTx.currency || (updatedTx.assetType === "stock_kr" ? "KRW" : "USD");
           const newTotal = updatedTx.quantity * updatedTx.price;
           const newFee = updatedTx.fee || 0;
 
+          let applyDeltaInTxCurrency = 0;
           if (updatedTx.type === "buy") {
-            applyDelta = -(newTotal + newFee);
+            applyDeltaInTxCurrency = -(newTotal + newFee);
           } else if (updatedTx.type === "sell") {
-            applyDelta = newTotal - newFee;
+            applyDeltaInTxCurrency = newTotal - newFee;
           } else if (updatedTx.type === "deposit") {
-            applyDelta = updatedTx.price;
+            applyDeltaInTxCurrency = updatedTx.price;
           } else if (updatedTx.type === "withdraw") {
-            applyDelta = -updatedTx.price;
+            applyDeltaInTxCurrency = -updatedTx.price;
+          }
+
+          let applyDelta = applyDeltaInTxCurrency;
+          if (newTxCurrency === "USD" && acc.currency === "KRW") {
+            applyDelta = applyDeltaInTxCurrency * exchangeRate;
+          } else if (newTxCurrency === "KRW" && acc.currency === "USD") {
+            applyDelta = applyDeltaInTxCurrency / exchangeRate;
           }
           cash += applyDelta;
         }
@@ -585,9 +616,18 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       const holding = holdingsMap[tx.symbol];
 
+      // Convert transaction price to holding's currency if they differ
+      const txCurrency = tx.currency || (tx.assetType === "stock_kr" ? "KRW" : "USD");
+      let txPriceInHoldingCurrency = tx.price;
+      if (txCurrency === "USD" && holding.currency === "KRW") {
+        txPriceInHoldingCurrency = tx.price * exchangeRate;
+      } else if (txCurrency === "KRW" && holding.currency === "USD") {
+        txPriceInHoldingCurrency = tx.price / exchangeRate;
+      }
+
       if (tx.type === "buy") {
         holding.qty += tx.quantity;
-        holding.cost += tx.quantity * tx.price;
+        holding.cost += tx.quantity * txPriceInHoldingCurrency;
       } else if (tx.type === "sell") {
         if (holding.qty > 0) {
           const avgPrice = holding.cost / holding.qty;

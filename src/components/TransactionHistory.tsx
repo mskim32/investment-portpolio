@@ -136,7 +136,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ onEditTr
               <tbody>
                 {filteredTransactions.map((tx) => {
                   const account = accounts.find((a) => a.id === tx.accountId);
-                  const currency = account?.currency || "KRW";
+                  const currency = tx.currency || account?.currency || (tx.assetType === "stock_kr" ? "KRW" : "USD");
                   const isTrade = tx.type === "buy" || tx.type === "sell";
                   const totalAmount = isTrade ? tx.quantity * tx.price : tx.price;
 
@@ -202,7 +202,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ onEditTr
           <div className={styles.mobileList}>
             {filteredTransactions.map((tx) => {
               const account = accounts.find((a) => a.id === tx.accountId);
-              const currency = account?.currency || "KRW";
+              const currency = tx.currency || account?.currency || (tx.assetType === "stock_kr" ? "KRW" : "USD");
               const isTrade = tx.type === "buy" || tx.type === "sell";
               const totalAmount = isTrade ? tx.quantity * tx.price : tx.price;
 

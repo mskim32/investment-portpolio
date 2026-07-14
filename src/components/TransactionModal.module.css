@@ -306,3 +306,9 @@
   text-align: center;
 }
 
+.currencyActive {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #3b82f6 !important;
+}
+
+

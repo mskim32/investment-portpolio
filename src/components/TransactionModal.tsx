@@ -34,6 +34,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
   const [fee, setFee] = useState("");
   const [date, setDate] = useState("");
   const [customYield, setCustomYield] = useState("");
+  const [currency, setCurrency] = useState<"KRW" | "USD">("USD");
 
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -75,6 +76,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
     setSymbol(quote.symbol);
     setName(quote.name);
     setAssetType(quote.assetType);
+    setCurrency(quote.assetType === "stock_kr" ? "KRW" : "USD");
     setSearchResults([]);
     setShowDropdown(false);
     setActiveSearchField(null);
@@ -94,6 +96,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
         setFee(editingTransaction.fee ? editingTransaction.fee.toString() : "");
         setDate(editingTransaction.date);
         setCustomYield(editingTransaction.customYield !== undefined ? editingTransaction.customYield.toString() : "");
+        setCurrency(editingTransaction.currency || (editingTransaction.assetType === "stock_kr" ? "KRW" : "USD"));
       } else {
         if (accounts.length > 0) {
           setAccountId(accounts[0].id);
@@ -106,6 +109,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
         setPrice("");
         setFee("");
         setCustomYield("");
+        setCurrency("KRW");
         // Default date to today
         const today = new Date().toISOString().split("T")[0];
         setDate(today);
@@ -119,6 +123,10 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
     setSymbol(sug.symbol);
     setName(sug.name);
     setAssetType(sug.assetType);
+    setCurrency(sug.assetType === "stock_kr" ? "KRW" : "USD");
+    setSearchResults([]);
+    setShowDropdown(false);
+    setActiveSearchField(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -159,6 +167,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
       date,
       fee: feeVal > 0 ? feeVal : undefined,
       customYield: isTrade && assetType === "etc" && customYield.trim() !== "" ? Number(customYield) : undefined,
+      currency: isTrade ? currency : undefined,
     };
 
     if (editingTransaction) {
@@ -179,6 +188,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
 
   const activeAccount = accounts.find((a) => a.id === accountId);
   const currencySymbol = activeAccount?.currency === "USD" ? "$" : "₩";
+  const txCurrencySymbol = currency === "USD" ? "$" : "₩";
 
   return (
     <div className={styles.overlay}>
@@ -241,15 +251,45 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
 
             {(type === "buy" || type === "sell") && (
               <>
-                {/* Asset Type Select */}
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>자산 분류</label>
-                  <select value={assetType} onChange={(e) => setAssetType(e.target.value as AssetType)}>
-                    <option value="stock_us">미국 주식</option>
-                    <option value="stock_kr">한국 주식</option>
-                    <option value="crypto">암호화폐</option>
-                    <option value="etc">기타/수기 자산</option>
-                  </select>
+                {/* Asset Type Select & Currency Selector */}
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>자산 분류</label>
+                    <select
+                      value={assetType}
+                      onChange={(e) => {
+                        const newAssetType = e.target.value as AssetType;
+                        setAssetType(newAssetType);
+                        setCurrency(newAssetType === "stock_kr" ? "KRW" : "USD");
+                      }}
+                    >
+                      <option value="stock_us">미국 주식</option>
+                      <option value="stock_kr">한국 주식</option>
+                      <option value="crypto">암호화폐</option>
+                      <option value="etc">기타/수기 자산</option>
+                    </select>
+                  </div>
+
+                  {assetType === "stock_us" ? (
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>거래 통화</label>
+                      <div className={styles.typeSelector}>
+                        {(["USD", "KRW"] as const).map((curr) => (
+                          <button
+                            key={curr}
+                            type="button"
+                            onClick={() => setCurrency(curr)}
+                            className={`${styles.typeBtn} ${currency === curr ? styles.currencyActive : ""}`}
+                            style={{ flex: 1 }}
+                          >
+                            {curr === "USD" ? "USD ($)" : "KRW (₩)"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={styles.formGroup} style={{ visibility: "hidden" }} />
+                  )}
                 </div>
 
                 {/* Quick suggestions */}
@@ -428,7 +468,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label className={styles.label}>체결 단가 ({currencySymbol})</label>
+                    <label className={styles.label}>체결 단가 ({txCurrencySymbol})</label>
                     <input
                       type="number"
                       step="any"
@@ -460,7 +500,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                 {/* Fee & Date */}
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label className={styles.label}>수수료 ({currencySymbol})</label>
+                    <label className={styles.label}>수수료 ({txCurrencySymbol})</label>
                     <input
                       type="number"
                       step="any"
