@@ -28,6 +28,7 @@ export interface Account {
   color?: string; // Hex color code for visualization
   autoTransfers?: AutoTransfer[];
   autoBuys?: AutoBuy[];
+  initialBalance?: number; // Initial cash deposit (principal)
 }
 
 export interface Transaction {

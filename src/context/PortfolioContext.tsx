@@ -16,6 +16,7 @@ interface PortfolioContextType {
   
   // Actions
   addAccount: (account: Omit<Account, "id">) => void;
+  updateAccount: (id: string, updated: Omit<Account, "id" | "autoTransfers" | "autoBuys">) => void;
   editAccountCash: (id: string, newCash: number) => void;
   deleteAccount: (id: string) => void;
   addTransaction: (transaction: Omit<Transaction, "id">) => void;
@@ -38,6 +39,7 @@ interface PortfolioContextType {
   
   // Computed values
   holdings: AssetHolding[];
+  accountValuations: { [accountId: string]: number };
   totalAssetsValue: number; // In activeCurrency
   totalInvestedAmount: number; // In activeCurrency
   totalProfitAmount: number; // In activeCurrency
@@ -55,6 +57,7 @@ const INITIAL_ACCOUNTS: Account[] = [
     cash: 3200000, 
     currency: "KRW", 
     color: "#6366F1",
+    initialBalance: 9677500,
     autoTransfers: [
       { id: "tf-1", day: 25, amount: 500000, type: "deposit", description: "급여 자동 이체" }
     ],
@@ -69,12 +72,13 @@ const INITIAL_ACCOUNTS: Account[] = [
     cash: 1200, 
     currency: "USD", 
     color: "#3B82F6",
+    initialBalance: 4245.6,
     autoTransfers: [],
     autoBuys: [
       { id: "ab-2", frequency: "weekly", dayOfWeek: 1, symbol: "AAPL", name: "Apple Inc.", quantity: 1, assetType: "stock_us" }
     ]
   },
-  { id: "acc-3", name: "업비트 암호화폐", type: "crypto_wallet", cash: 850000, currency: "KRW", color: "#10B981", autoTransfers: [], autoBuys: [] },
+  { id: "acc-3", name: "업비트 암호화폐", type: "crypto_wallet", cash: 850000, currency: "KRW", color: "#10B981", initialBalance: 8926000, autoTransfers: [], autoBuys: [] },
 ];
 
 const INITIAL_TRANSACTIONS: Transaction[] = [
@@ -203,16 +207,70 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ...newAcc,
       id: `acc-${Date.now()}`,
       color: newAcc.color || `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, "0")}`,
+      initialBalance: newAcc.cash,
       autoTransfers: [],
       autoBuys: [],
     };
     setAccounts((prev) => [...prev, account]);
   };
 
+  // Update Account info
+  const updateAccount = (id: string, updated: Omit<Account, "id" | "autoTransfers" | "autoBuys">) => {
+    setAccounts((prev) =>
+      prev.map((acc) => {
+        if (acc.id !== id) return acc;
+        
+        const newInitialBalance = updated.initialBalance !== undefined ? updated.initialBalance : updated.cash;
+
+        // Find all transactions for this account
+        const accTxs = transactions.filter((t) => t.accountId === id);
+        
+        // Sum all cash deltas from transactions
+        let txCashDelta = 0;
+        accTxs.forEach((tx) => {
+          let cashDeltaInTxCurrency = 0;
+          const totalTradeAmount = tx.quantity * tx.price;
+          const fee = tx.fee || 0;
+
+          if (tx.type === "buy") {
+            cashDeltaInTxCurrency = -(totalTradeAmount + fee);
+          } else if (tx.type === "sell") {
+            cashDeltaInTxCurrency = totalTradeAmount - fee;
+          } else if (tx.type === "deposit") {
+            cashDeltaInTxCurrency = tx.price;
+          } else if (tx.type === "withdraw") {
+            cashDeltaInTxCurrency = -tx.price;
+          }
+
+          // Convert transaction currency to the NEW account currency if they differ
+          const txCurrency = tx.currency || (tx.assetType === "stock_kr" ? "KRW" : "USD");
+          let cashDelta = cashDeltaInTxCurrency;
+          if (txCurrency === "USD" && updated.currency === "KRW") {
+            cashDelta = cashDeltaInTxCurrency * exchangeRate;
+          } else if (txCurrency === "KRW" && updated.currency === "USD") {
+            cashDelta = cashDeltaInTxCurrency / exchangeRate;
+          }
+          
+          txCashDelta += cashDelta;
+        });
+
+        return {
+          ...acc,
+          name: updated.name,
+          type: updated.type,
+          currency: updated.currency,
+          color: updated.color,
+          initialBalance: newInitialBalance,
+          cash: newInitialBalance + txCashDelta,
+        };
+      })
+    );
+  };
+
   // Edit Account Cash directly
   const editAccountCash = (id: string, newCash: number) => {
     setAccounts((prev) =>
-      prev.map((acc) => (acc.id === id ? { ...acc, cash: newCash } : acc))
+      prev.map((acc) => (acc.id === id ? { ...acc, cash: newCash, initialBalance: newCash } : acc))
     );
   };
 
@@ -724,6 +782,89 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
   }, [transactions, prices, selectedAccountId, sortBy, activeCurrency, exchangeRate]);
 
+  // Account Valuations (Cash + Holdings Valuation per account)
+  const accountValuations = React.useMemo(() => {
+    const valuations: { [accountId: string]: number } = {};
+
+    accounts.forEach((acc) => {
+      let totalVal = acc.cash;
+
+      const accTxs = transactions.filter((t) => t.accountId === acc.id);
+      
+      const holdingsMap: { [symbol: string]: { qty: number; cost: number; type: AssetType; currency: "KRW" | "USD" } } = {};
+      const sortedTxs = [...accTxs].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+
+      for (const tx of sortedTxs) {
+        if (tx.type !== "buy" && tx.type !== "sell") continue;
+
+        if (!holdingsMap[tx.symbol]) {
+          holdingsMap[tx.symbol] = { qty: 0, cost: 0, type: tx.assetType, currency: acc.currency };
+        }
+
+        const holding = holdingsMap[tx.symbol];
+        
+        const txCurrency = tx.currency || (tx.assetType === "stock_kr" ? "KRW" : "USD");
+        let txPriceInHoldingCurrency = tx.price;
+        if (txCurrency === "USD" && holding.currency === "KRW") {
+          txPriceInHoldingCurrency = tx.price * exchangeRate;
+        } else if (txCurrency === "KRW" && holding.currency === "USD") {
+          txPriceInHoldingCurrency = tx.price / exchangeRate;
+        }
+
+        if (tx.type === "buy") {
+          holding.qty += tx.quantity;
+          holding.cost += tx.quantity * txPriceInHoldingCurrency;
+        } else if (tx.type === "sell") {
+          if (holding.qty > 0) {
+            const avgPrice = holding.cost / holding.qty;
+            holding.qty = Math.max(0, holding.qty - tx.quantity);
+            holding.cost = holding.qty * avgPrice;
+          }
+        }
+      }
+
+      for (const symbol in holdingsMap) {
+        const h = holdingsMap[symbol];
+        if (h.qty <= 0) continue;
+
+        const avgBuyPrice = h.cost / h.qty;
+        let currentPrice = avgBuyPrice;
+        let isManualYield = false;
+
+        if (h.type === "etc") {
+          const symbolTxs = sortedTxs.filter((t) => t.symbol === symbol);
+          const latestTxWithYield = [...symbolTxs].reverse().find((t) => t.customYield !== undefined);
+          if (latestTxWithYield && latestTxWithYield.customYield !== undefined) {
+            currentPrice = avgBuyPrice * (1 + latestTxWithYield.customYield / 100);
+            isManualYield = true;
+          }
+        }
+
+        if (!isManualYield) {
+          const priceInfo = prices[symbol];
+          const hasValidPrice = priceInfo && priceInfo.price > 0;
+          if (hasValidPrice) {
+            currentPrice = priceInfo.price;
+            const priceCurrency = priceInfo.currency || (symbol.endsWith(".KS") || symbol.endsWith(".KQ") ? "KRW" : "USD");
+            if (priceCurrency === "USD" && h.currency === "KRW") {
+              currentPrice *= exchangeRate;
+            } else if (priceCurrency === "KRW" && h.currency === "USD") {
+              currentPrice /= exchangeRate;
+            }
+          }
+        }
+
+        totalVal += h.qty * currentPrice;
+      }
+
+      valuations[acc.id] = totalVal;
+    });
+
+    return valuations;
+  }, [accounts, transactions, prices, exchangeRate]);
+
   // 2. Aggregate overall values
   const summary = React.useMemo(() => {
     // A. Cash value aggregation
@@ -789,6 +930,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         groupBy,
         isLoadingPrices,
         addAccount,
+        updateAccount,
         editAccountCash,
         deleteAccount,
         addTransaction,
@@ -805,6 +947,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         clearAllData,
         restoreSampleData,
         holdings: computedHoldings,
+        accountValuations,
         addAutoTransfer,
         deleteAutoTransfer,
         addAutoBuy,

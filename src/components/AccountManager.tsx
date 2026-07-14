@@ -21,26 +21,27 @@ export const AccountManager: React.FC = () => {
   const {
     accounts,
     addAccount,
+    updateAccount,
     deleteAccount,
     editAccountCash,
     addAutoTransfer,
     deleteAutoTransfer,
     addAutoBuy,
     deleteAutoBuy,
+    accountValuations,
   } = usePortfolio();
 
   const [isAdding, setIsAdding] = useState(false);
+  const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [type, setType] = useState<Account["type"]>("brokerage");
   const [currency, setCurrency] = useState<Account["currency"]>("KRW");
   const [cash, setCash] = useState("");
   const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
 
-  // Expansion and editing state
+  // Expansion state
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<"transfers" | "buys">("transfers");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editCashValue, setEditCashValue] = useState("");
 
   // Subform - Auto Transfer states
   const [tfType, setTfType] = useState<"deposit" | "withdraw">("deposit");
@@ -68,39 +69,54 @@ export const AccountManager: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-
-    addAccount({
-      name: name.trim(),
-      type,
-      currency,
-      cash: Number(cash) || 0,
-      color: selectedColor,
-      autoTransfers: [],
-      autoBuys: [],
-    });
-
-    // Reset Form
+  const handleCancel = () => {
+    setIsAdding(false);
+    setEditingAccountId(null);
     setName("");
     setType("brokerage");
     setCurrency("KRW");
     setCash("");
-    setIsAdding(false);
+    setSelectedColor(PRESET_COLORS[0]);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    const cashVal = Number(cash) || 0;
+
+    if (editingAccountId) {
+      updateAccount(editingAccountId, {
+        name: name.trim(),
+        type,
+        currency,
+        cash: cashVal,
+        initialBalance: cashVal,
+        color: selectedColor,
+      });
+    } else {
+      addAccount({
+        name: name.trim(),
+        type,
+        currency,
+        cash: cashVal,
+        color: selectedColor,
+        autoTransfers: [],
+        autoBuys: [],
+      });
+    }
+
+    handleCancel();
   };
 
   const startEditing = (acc: Account) => {
-    setEditingId(acc.id);
-    setEditCashValue(acc.cash.toString());
-  };
-
-  const saveCashEdit = (id: string) => {
-    const newVal = Number(editCashValue);
-    if (!isNaN(newVal)) {
-      editAccountCash(id, newVal);
-    }
-    setEditingId(null);
+    setEditingAccountId(acc.id);
+    setName(acc.name);
+    setType(acc.type);
+    setCurrency(acc.currency);
+    setCash((acc.initialBalance ?? acc.cash).toString());
+    setSelectedColor(acc.color || PRESET_COLORS[0]);
+    setIsAdding(true);
   };
 
   const handleCardClick = (id: string, e: React.MouseEvent) => {
@@ -156,7 +172,10 @@ export const AccountManager: React.FC = () => {
         </div>
         {!isAdding && (
           <button
-            onClick={() => setIsAdding(true)}
+            onClick={() => {
+              setEditingAccountId(null);
+              setIsAdding(true);
+            }}
             className="btn btn-secondary btn-sm"
             style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
           >
@@ -168,10 +187,10 @@ export const AccountManager: React.FC = () => {
       {isAdding ? (
         <form onSubmit={handleSubmit} className={styles.addForm}>
           <div className={styles.formHeader}>
-            <span className={styles.formTitle}>새 계좌 등록</span>
+            <span className={styles.formTitle}>{editingAccountId ? "계좌 정보 수정" : "새 계좌 등록"}</span>
             <button
               type="button"
-              onClick={() => setIsAdding(false)}
+              onClick={handleCancel}
               className={styles.cancelBtn}
             >
               <X size={16} />
@@ -209,7 +228,7 @@ export const AccountManager: React.FC = () => {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>초기 현금 잔고</label>
+            <label className={styles.label}>초기 현금 잔고 (원금)</label>
             <input
               type="number"
               placeholder="0"
@@ -235,7 +254,7 @@ export const AccountManager: React.FC = () => {
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "0.5rem" }}>
-            계좌 생성하기
+            {editingAccountId ? "계좌 정보 수정하기" : "계좌 생성하기"}
           </button>
         </form>
       ) : (
@@ -257,31 +276,14 @@ export const AccountManager: React.FC = () => {
                     </span>
                   </div>
 
-                  {/* Cash editing */}
-                  {editingId === acc.id ? (
-                    <div className={styles.editRow}>
-                      <input
-                        type="number"
-                        value={editCashValue}
-                        onChange={(e) => setEditCashValue(e.target.value)}
-                        className={styles.editInput}
-                        autoFocus
-                      />
-                      <button onClick={() => saveCashEdit(acc.id)} className={styles.saveBtn}>
-                        <Check size={14} />
-                      </button>
-                      <button onClick={() => setEditingId(null)} className={styles.closeBtn}>
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className={styles.cashRow}>
-                      <span className={styles.cashValue}>{formatCurrency(acc.cash, acc.currency)}</span>
-                      <button onClick={() => startEditing(acc)} className={styles.editBtn} title="잔고 직접 수정">
-                        <Edit2 size={12} />
-                      </button>
-                    </div>
-                  )}
+                  <div className={styles.cashRow}>
+                    <span className={styles.cashValue}>
+                      {formatCurrency(accountValuations[acc.id] ?? acc.cash, acc.currency)}
+                    </span>
+                    <button onClick={() => startEditing(acc)} className={styles.editBtn} title="계좌 정보 수정">
+                      <Edit2 size={12} />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Indicators & Delete Account */}
