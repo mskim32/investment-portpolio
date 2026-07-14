@@ -70,7 +70,7 @@ export const DashboardSummary: React.FC = () => {
         </div>
         <div className={styles.cardBody}>
           <h2 className={styles.cardValue}>{formatVal(totalInvestedAmount)}</h2>
-          <span className={styles.cardSubtext}>현금 + 보유 자산 매수 원금</span>
+          <span className={styles.cardSubtext}>계좌 설정 원금 + 순수 입출금</span>
         </div>
         <div className={styles.sparkline}>
           <svg viewBox="0 0 90 30" className={styles.sparklineSvg} preserveAspectRatio="none">

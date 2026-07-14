@@ -904,10 +904,45 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       totalHoldingsCurrentValue += curr;
     }
 
+    // C. Investment Principal (Initial Balance + deposits - withdrawals)
+    let totalInvestedAmount = 0;
+    for (const acc of filteredAccounts) {
+      let initial = acc.initialBalance !== undefined ? acc.initialBalance : acc.cash;
+      if (acc.currency === "USD" && activeCurrency === "KRW") {
+        initial *= exchangeRate;
+      } else if (acc.currency === "KRW" && activeCurrency === "USD") {
+        initial /= exchangeRate;
+      }
+      totalInvestedAmount += initial;
+
+      // Add deposits and subtract withdrawals
+      const accTxs = transactions.filter((t) => t.accountId === acc.id);
+      for (const tx of accTxs) {
+        if (tx.type === "deposit") {
+          let amt = tx.price;
+          const txCurrency = tx.currency || (tx.assetType === "stock_kr" ? "KRW" : "USD");
+          if (txCurrency === "USD" && activeCurrency === "KRW") {
+            amt *= exchangeRate;
+          } else if (txCurrency === "KRW" && activeCurrency === "USD") {
+            amt /= exchangeRate;
+          }
+          totalInvestedAmount += amt;
+        } else if (tx.type === "withdraw") {
+          let amt = tx.price;
+          const txCurrency = tx.currency || (tx.assetType === "stock_kr" ? "KRW" : "USD");
+          if (txCurrency === "USD" && activeCurrency === "KRW") {
+            amt *= exchangeRate;
+          } else if (txCurrency === "KRW" && activeCurrency === "USD") {
+            amt /= exchangeRate;
+          }
+          totalInvestedAmount -= amt;
+        }
+      }
+    }
+
     const totalAssetsValue = totalHoldingsCurrentValue + totalCashValue;
-    const totalInvestedAmount = totalHoldingsBuyValue + totalCashValue; // treatment: cash has 0% gain
-    const totalProfitAmount = totalHoldingsCurrentValue - totalHoldingsBuyValue;
-    const totalProfitPercent = totalHoldingsBuyValue > 0 ? (totalProfitAmount / totalHoldingsBuyValue) * 100 : 0;
+    const totalProfitAmount = totalAssetsValue - totalInvestedAmount;
+    const totalProfitPercent = totalInvestedAmount > 0 ? (totalProfitAmount / totalInvestedAmount) * 100 : 0;
 
     return {
       totalAssetsValue,
@@ -915,7 +950,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       totalProfitAmount,
       totalProfitPercent,
     };
-  }, [computedHoldings, accounts, selectedAccountId, activeCurrency, exchangeRate]);
+  }, [computedHoldings, accounts, transactions, selectedAccountId, activeCurrency, exchangeRate]);
 
   return (
     <PortfolioContext.Provider
